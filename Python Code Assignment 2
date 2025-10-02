@@ -1,0 +1,149 @@
+from flask import Flask, request, jsonify
+app = Flask(__name__)
+
+# Endpoint-1 http://127.0.0.1:5000/
+@app.route("/", methods=["GET"])
+def index():
+    return "Welcome to Flask framework!"
+
+# Endpoint-2 http://127.0.0.1:5000/Cohort-60
+@app.route("/Cohort-60", methods=["GET"])
+def hello_world():
+    print("Cohort 60 endpoint accessed")
+    return "Hello Earth Humans. I am Flask"
+
+#Endpoint-3 http://127.0.0.1:5000/contact
+@app.route("/contact", methods=["GET"])
+def contact():
+    information = {"email": "popeyes@gmail.com", "phone": "1-800-888-888"}
+    print("A user accessed this resource at xx:xx")
+    return information
+
+#Endpoint-4 http://127.0.0.1:5000/course
+@app.route("/course", methods=["GET"])
+def course_information():
+    return {
+        "title": "Introductory Web API Flask",
+        "duration": "4 sessions",
+        "level": "Beginner"
+    }
+
+## MINI CHALLENGE!!!!!!!!!!
+# Create a user/endpoint
+#Endpoint-5 http://127.0.0.1:5000/user
+@app.route("/user", methods=["GET"])
+def user_info():
+    information = {
+        "name": "chili_cheese_dog", 
+        "role": "deliciousness", 
+        "is_active": "true", 
+        "favorite_technologies": ["linux", "python"]
+    }
+    print("A user just accessed this resource, and we have reason to believe its a Chili cheese dog!!")
+    return information
+
+student_names = ["Reggie", "Tim", "Zane", "Michael", "Jake", "Jose"]
+
+#Endpoint-6 http://127.0.0.1:5000/students GET
+@app.route("/students", methods=["GET"])
+def get_students():
+    print("Students endpoint accessed")
+    return student_names
+
+#Endpoint-6 http://127.0.0.1:5000/students POST
+@app.route("/students", methods=["POST"])
+def add_student():
+    student_names.append("Leo")
+    return student_names
+
+# ---- Assignment 1 ----
+# Endpoint-7 http://127.0.0.1:5000/api/products
+products = [
+    {"id": 1, "name": "Cake", "price": 25},
+    {"id": 2, "name": "Ice-cream", "price": 5},
+    {"id": 3, "name": "Cookie", "price": 3},
+    {"id": 4, "name": "Chocolate", "price": 10}
+]
+
+# GET /api/products endpoint that returns a list of products
+@app.route("/api/products", methods=["GET"])
+def get_products():
+    return products
+
+# ---- ASSIGNMENT SOLUTION ----
+
+# POST /api/products - Add a new product
+@app.route("/api/products", methods=["POST"])
+def add_product():
+    # Get the JSON data from the request
+    new_product = request.get_json()
+    
+    # Validate that required fields are present
+    if not new_product or "name" not in new_product or "price" not in new_product:
+        return jsonify({"error": "Missing required fields: name and price"}), 400
+    
+    # Generate a new ID (get the max ID and add 1)
+    new_id = max([p["id"] for p in products]) + 1 if products else 1
+    
+    # Create the product with the new ID
+    product = {
+        "id": new_id,
+        "name": new_product["name"],
+        "price": new_product["price"]
+    }
+    
+    # Add to the products list
+    products.append(product)
+    
+    # Return the created product with 201 Created status
+    return jsonify(product), 201
+
+# GET /api/products/<int:id> - Get a product by ID
+@app.route("/api/products/<int:id>", methods=["GET"])
+def get_product_by_id(id):
+    # Search for the product with the matching ID
+    product = next((p for p in products if p["id"] == id), None)
+    
+    # If product not found, return 404 error
+    if product is None:
+        return jsonify({"error": f"Product with id {id} not found"}), 404
+    
+    # Return the product with 200 OK status
+    return jsonify(product), 200
+
+# DELETE /api/products/<int:id> - Delete a product by ID
+@app.route("/api/products/<int:id>", methods=["DELETE"])
+def delete_product(id):
+    # Search for the product with the matching ID
+    product = next((p for p in products if p["id"] == id), None)
+    
+    # If product not found, return 404 error
+    if product is None:
+        return jsonify({"error": f"Product with id {id} not found"}), 404
+    
+    # Remove the product from the list
+    products.remove(product)
+    
+    # Return success message with 200 OK status
+    return jsonify({"message": f"Product with id {id} has been deleted successfully"}), 200
+
+# ---- END ASSIGNMENT SOLUTION ----
+
+# Endpoint-8 http://127.0.0.1:5000/api/products/count
+@app.route("/api/products/count", methods=["GET"])
+def get_product_count():
+    count = len(products)
+    return {"count": count}
+
+# ---- Assignment 2 ----
+# Endpoint-9 http://127.0.0.1:5000/coupons
+@app.route("/coupons", methods=["GET"])
+def get_coupons():
+    coupons = [
+        {"name": "save10", "discount": 0.10},
+        {"name": "save50", "discount": 0.50}
+    ]
+    return coupons
+
+if __name__ == "__main__":
+    app.run(debug=True)
